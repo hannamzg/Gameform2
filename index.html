@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مغامرة النسبة المئوية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .option-btn {
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .option-btn:hover {
+            transform: scale(1.02);
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #48bb78;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container" class="game-card">
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1 class="text-4xl font-bold text-indigo-700 mb-6">مغامرة النسبة المئوية 🏆</h1>
+        <p class="text-lg text-gray-600 mb-8">أهلاً بك يا بطل الرياضيات! هل أنت مستعد لجمع الكنوز من خلال حل ألغاز النسبة المئوية؟</p>
+        <div class="mb-8">
+            <span class="text-6xl floating">💎</span>
+        </div>
+        <button onclick="startGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-full text-xl shadow-lg">
+            ابدأ المغامرة الآن
+        </button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+            <span id="score-display" class="font-bold text-indigo-600 text-lg">النقاط: 0</span>
+            <span id="level-display" class="font-bold text-gray-500">السؤال 1 من 10</span>
+        </div>
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        
+        <div id="question-container" class="mb-8">
+            <h2 id="question-text" class="text-2xl font-bold text-gray-800 mb-6 leading-relaxed">جاري التحميل...</h2>
+            <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be injected here -->
+            </div>
+        </div>
+        
+        <div id="feedback" class="hidden p-4 rounded-lg font-bold mb-4"></div>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="hidden">
+        <h2 class="text-4xl font-bold text-indigo-700 mb-4">انتهت المهمة! 🏁</h2>
+        <div id="final-result" class="text-2xl mb-6 text-gray-700"></div>
+        <div class="text-6xl mb-6">👑</div>
+        <button onclick="restartGame()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md transition-all">
+            العب مرة أخرى
+        </button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "ما هي النسبة المئوية التي تمثل الكسر 1/2؟", options: ["25%", "50%", "75%", "10%"], correct: 1 },
+        { q: "إذا كان سعر القميص 100 شاقل وعليه خصم 20%، كم قيمة الخصم؟", options: ["10 شواقل", "20 شاقل", "50 شاقل", "80 شاقل"], correct: 1 },
+        { q: "حول 0.75 إلى نسبة مئوية:", options: ["7.5%", "75%", "0.75%", "750%"], correct: 1 },
+        { q: "ما هو 10% من العدد 200؟", options: ["10", "20", "200", "5"], correct: 1 },
+        { q: "نسبة 1/4 تساوي بالنسية المئوية:", options: ["40%", "20%", "25%", "15%"], correct: 2 },
+        { q: "في الفصل 20 طالباً، نجح منهم 15. ما هي نسبة النجاح؟", options: ["60%", "75%", "80%", "70%"], correct: 1 },
+        { q: "النسبة المئوية لـ 3 من 10 هي:", options: ["3%", "30%", "13%", "0.3%"], correct: 1 },
+        { q: "اشترى خالد لعبة بـ 50 شاقلاً بخصم 50%، كم دفع خالد؟", options: ["25 شاقل", "40 شاقل", "10 شواقل", "50 شاقل"], correct: 0 },
+        { q: "الكسر العشري المساوي لـ 5% هو:", options: ["0.5", "0.05", "0.005", "5.0"], correct: 1 },
+        { q: "إذا كان معك 80 تفاحة وفسد منها 25%، كم عدد التفاح الفاسد؟", options: ["10", "20", "30", "40"], correct: 1 }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[currentQuestionIndex];
+        document.getElementById('question-text').innerText = q.q;
+        document.getElementById('level-display').innerText = `السؤال ${currentQuestionIndex + 1} من ${questions.length}`;
+        document.getElementById('score-display').innerText = `النقاط: ${score}`;
+        
+        const progress = ((currentQuestionIndex) / questions.length) * 100;
+        document.getElementById('progress-fill').style.width = `${progress}%`;
+
+        const optionsGrid = document.getElementById('options-grid');
+        optionsGrid.innerHTML = '';
+        
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn bg-white border-2 border-indigo-200 hover:border-indigo-500 p-4 rounded-xl text-lg font-semibold text-gray-700 shadow-sm";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(index);
+            optionsGrid.appendChild(btn);
+        });
+
+        document.getElementById('feedback').classList.add('hidden');
+    }
+
+    function checkAnswer(selectedIndex) {
+        const q = questions[currentQuestionIndex];
+        const feedback = document.getElementById('feedback');
+        feedback.classList.remove('hidden');
+        
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === q.correct) {
+            score += 10;
+            feedback.innerText = "رائع! إجابة صحيحة ✅";
+            feedback.className = "p-4 rounded-lg font-bold mb-4 bg-green-100 text-green-700";
+            allBtns[selectedIndex].classList.add('bg-green-200', 'border-green-500');
+        } else {
+            feedback.innerText = `للأسف خطأ، الإجابة هي: ${q.options[q.correct]} ❌`;
+            feedback.className = "p-4 rounded-lg font-bold mb-4 bg-red-100 text-red-700";
+            allBtns[selectedIndex].classList.add('bg-red-200', 'border-red-500');
+        }
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showEndScreen();
+            }
+        }, 1500);
+    }
+
+    function showEndScreen() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        
+        let message = "";
+        if (score >= 80) message = "أنت عبقري في النسب المئوية! مذهل! 🌟";
+        else if (score >= 50) message = "عمل جيد! يمكنك أن تصبح أفضل مع التدريب. 👍";
+        else message = "لا بأس، حاول مرة أخرى لتصبح بطلاً في الرياضيات. 💪";
+        
+        document.getElementById('final-result').innerHTML = `لقد حصلت على <b>${score}</b> نقطة من 100<br><br>${message}`;
+    }
+
+    function restartGame() {
+        currentQuestionIndex = 0;
+        score = 0;
+        document.getElementById('end-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
